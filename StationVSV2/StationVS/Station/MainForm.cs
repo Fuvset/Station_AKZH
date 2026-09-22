@@ -51,7 +51,7 @@ class MainForm : Form
         st.SwitchMoved += (n, plus) => Send($"SW{n}{(plus ? '+' : '-')}");
         st.SignalChanged += (idx, open) => Send($"SG{idx}:{(open ? 1 : 0)}");
 
-        RebuildFromList();
+        //RebuildFromList();
         RefreshPorts();
         SetStatus(false, null);
         RefreshUi();
@@ -74,13 +74,20 @@ class MainForm : Form
 
         var left = new FlowLayoutPanel
         {
-            Dock = DockStyle.Left, AutoSize = true, WrapContents = false,
-            FlowDirection = FlowDirection.LeftToRight, Padding = new Padding(10, 10, 0, 0)
+            Dock = DockStyle.Left,
+            AutoSize = true,
+            WrapContents = false,
+            FlowDirection = FlowDirection.LeftToRight,
+            Padding = new Padding(10, 10, 0, 0)
         };
         lblArduino = new Label
         {
-            AutoSize = true, BackColor = Color.White, ForeColor = Color.Red,
-            Font = new Font("Bahnschrift", 10f, FontStyle.Bold), Padding = new Padding(3), Margin = new Padding(3, 3, 12, 3)
+            AutoSize = true,
+            BackColor = Color.White,
+            ForeColor = Color.Red,
+            Font = new Font("Bahnschrift", 10f, FontStyle.Bold),
+            Padding = new Padding(3),
+            Margin = new Padding(3, 3, 12, 3)
         };
         cmbPort = new ComboBox { DropDownStyle = ComboBoxStyle.DropDownList, Width = 180, Margin = new Padding(3, 4, 12, 3) };
         cmbPort.DropDown += (_, _) => RefreshPorts();
@@ -99,8 +106,11 @@ class MainForm : Form
 
         var right = new FlowLayoutPanel
         {
-            Dock = DockStyle.Right, AutoSize = true, WrapContents = false,
-            FlowDirection = FlowDirection.LeftToRight, Padding = new Padding(0, 12, 10, 0)
+            Dock = DockStyle.Right,
+            AutoSize = true,
+            WrapContents = false,
+            FlowDirection = FlowDirection.LeftToRight,
+            Padding = new Padding(0, 12, 10, 0)
         };
         right.Controls.Add(PinkButton("Отменить маршрут", () => st.CancelLast()));
         right.Controls.Add(PinkButton("Убрать всё", () => st.ClearAll()));
@@ -115,75 +125,74 @@ class MainForm : Form
 
         // ----- нижняя часть -----
         var bottom = new TableLayoutPanel { Dock = DockStyle.Fill, ColumnCount = 3, RowCount = 1, BackColor = Bg };
-        bottom.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 340));
+        bottom.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 540));
         bottom.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 300));
         bottom.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100));
         root.Controls.Add(bottom, 0, 2);
+        
 
-        // колонка 1: категория + построение маршрута "от точки до точки" + список
-        var routesCell = new TableLayoutPanel { Dock = DockStyle.Fill, ColumnCount = 1, RowCount = 4, BackColor = Bg };
-        routesCell.RowStyles.Add(new RowStyle(SizeType.Absolute, 40));
-        routesCell.RowStyles.Add(new RowStyle(SizeType.Absolute, 34));
-        routesCell.RowStyles.Add(new RowStyle(SizeType.Absolute, 34));
-        routesCell.RowStyles.Add(new RowStyle(SizeType.Percent, 100));
 
-        var modes = new TableLayoutPanel { Dock = DockStyle.Fill, ColumnCount = 2, RowCount = 1, BackColor = Bg };
-        modes.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 50));
-        modes.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 50));
+        // колонка 1: поездные и маневринные
+        var routesCell = new TableLayoutPanel { Dock = DockStyle.Fill, ColumnCount = 1, RowCount = 3, BackColor = Bg };
+
+        var modes = new TableLayoutPanel
+        {
+            Dock = DockStyle.Top,
+            ColumnCount = 1,
+            RowCount = 2,
+            AutoSize = true,
+            AutoSizeMode = AutoSizeMode.GrowAndShrink,
+            BackColor = Bg,
+            Padding = new Padding(0),
+            Margin = new Padding(0, 70, 0, 0)
+        };
+
         btnTrain = ModeButton("ПОЕЗДНЫЕ", () => SetCategory(false));
         btnShunt = ModeButton("МАНЕВРОВЫЕ", () => SetCategory(true));
+
+        btnTrain.Anchor = AnchorStyles.Left;
+        btnShunt.Anchor = AnchorStyles.Left;
+
         modes.Controls.Add(btnTrain, 0, 0);
-        modes.Controls.Add(btnShunt, 1, 0);
+        modes.Controls.Add(btnShunt, 0, 1);
+
         routesCell.Controls.Add(modes, 0, 0);
 
-        // "Откуда"
-        var fromRow = new FlowLayoutPanel { Dock = DockStyle.Fill, FlowDirection = FlowDirection.LeftToRight, BackColor = Bg, WrapContents = false };
-        fromRow.Controls.Add(new Label { Text = "Откуда:", AutoSize = true, Margin = new Padding(0, 8, 4, 0), ForeColor = Color.FromArgb(30, 45, 45) });
-        cmbFrom = new ComboBox { DropDownStyle = ComboBoxStyle.DropDownList, Width = 170 };
-        cmbFrom.SelectedIndexChanged += (_, _) => { if (!updatingCombo) RebuildToList(); };
-        fromRow.Controls.Add(cmbFrom);
-        routesCell.Controls.Add(fromRow, 0, 1);
+        bottom.Controls.Add(routesCell, 0, 0);
 
-        // "Куда" + кнопка
-        var toRow = new FlowLayoutPanel { Dock = DockStyle.Fill, FlowDirection = FlowDirection.LeftToRight, BackColor = Bg, WrapContents = false };
-        toRow.Controls.Add(new Label { Text = "Куда:", AutoSize = true, Margin = new Padding(0, 8, 12, 0), ForeColor = Color.FromArgb(30, 45, 45) });
-        cmbTo = new ComboBox { DropDownStyle = ComboBoxStyle.DropDownList, Width = 170 };
-        toRow.Controls.Add(cmbTo);
-        btnSetRoute = PinkButton("Установить", () => SetOrCancelFromCombo());
-        btnSetRoute.Margin = new Padding(10, 3, 0, 0);
-        toRow.Controls.Add(btnSetRoute);
-        routesCell.Controls.Add(toRow, 0, 2);
 
-        lstRoutes = new ListBox
-        {
-            Dock = DockStyle.Fill, BackColor = Color.FromArgb(225, 240, 238), BorderStyle = BorderStyle.None,
-            Font = new Font("Bahnschrift", 10f), IntegralHeight = false
-        };
-        lstRoutes.DoubleClick += (_, _) => SetOrCancelFromList();
-        routesCell.Controls.Add(lstRoutes, 0, 3);
         bottom.Controls.Add(routesCell, 0, 0);
 
         // колонка 2: стрелки вручную
         var swCell = new TableLayoutPanel { Dock = DockStyle.Fill, ColumnCount = 1, RowCount = 2, BackColor = Bg };
-        swCell.RowStyles.Add(new RowStyle(SizeType.Absolute, 30));
+        swCell.RowStyles.Add(new RowStyle(SizeType.Absolute, 50));
         swCell.RowStyles.Add(new RowStyle(SizeType.Percent, 100));
         swCell.Controls.Add(new Label
         {
-            Text = "Стрелки (вручную)", Dock = DockStyle.Fill, TextAlign = ContentAlignment.MiddleLeft,
-            Font = new Font("Bahnschrift", 11f, FontStyle.Bold), ForeColor = Color.FromArgb(40, 55, 55)
+            Text = "Стрелки (вручную)",
+            Dock = DockStyle.Fill,
+            TextAlign = ContentAlignment.MiddleLeft,
+            Font = new Font("Bahnschrift", 11f, FontStyle.Bold),
+            ForeColor = Color.FromArgb(40, 55, 55)
         }, 0, 0);
         switchFlow = new FlowLayoutPanel
         {
-            Dock = DockStyle.Fill, AutoScroll = true, WrapContents = true,
-            FlowDirection = FlowDirection.TopDown, BackColor = Bg
+            Dock = DockStyle.Fill,
+            AutoScroll = true,
+            WrapContents = true,
+            FlowDirection = FlowDirection.LeftToRight,
+            BackColor = Bg
         };
         foreach (var n in st.Switches.Keys.OrderBy(k => k))
         {
             int num = n;
             var b = new Button
             {
-                Size = new Size(92, 30), Margin = new Padding(2), FlatStyle = FlatStyle.Flat,
-                BackColor = BtnLight, UseVisualStyleBackColor = false
+                Size = new Size(92, 30),
+                Margin = new Padding(2),
+                FlatStyle = FlatStyle.Flat,
+                BackColor = BtnLight,
+                UseVisualStyleBackColor = false
             };
             b.FlatAppearance.BorderSize = 0;
             b.Click += (_, _) => st.ToggleSwitch(num);
@@ -201,7 +210,9 @@ class MainForm : Form
         var activePanel = new Panel { Dock = DockStyle.Fill, AutoScroll = true, BackColor = Bg };
         lblActive = new Label
         {
-            AutoSize = true, Location = new Point(6, 4), ForeColor = Color.FromArgb(30, 45, 45),
+            AutoSize = true,
+            Location = new Point(6, 4),
+            ForeColor = Color.FromArgb(30, 45, 45),
             Font = new Font("Bahnschrift", 11f)
         };
         activePanel.Controls.Add(lblActive);
@@ -209,8 +220,11 @@ class MainForm : Form
 
         lstLog = new ListBox
         {
-            Dock = DockStyle.Fill, BorderStyle = BorderStyle.None, BackColor = Color.FromArgb(225, 240, 238),
-            Font = new Font("Consolas", 9.5f), IntegralHeight = false
+            Dock = DockStyle.Fill,
+            BorderStyle = BorderStyle.None,
+            BackColor = Color.FromArgb(225, 240, 238),
+            Font = new Font("Consolas", 9.5f),
+            IntegralHeight = false
         };
         logCell.Controls.Add(lstLog, 0, 1);
         bottom.Controls.Add(logCell, 2, 0);
@@ -220,10 +234,16 @@ class MainForm : Form
     {
         var b = new Button
         {
-            Text = text, AutoSize = true, AutoSizeMode = AutoSizeMode.GrowAndShrink,
-            FlatStyle = FlatStyle.Flat, BackColor = Pink, ForeColor = Color.White,
-            Font = new Font("Bahnschrift", 9f, FontStyle.Bold), Padding = new Padding(4, 2, 4, 2),
-            Margin = new Padding(6, 0, 0, 0), UseVisualStyleBackColor = false
+            Text = text,
+            AutoSize = true,
+            AutoSizeMode = AutoSizeMode.GrowAndShrink,
+            FlatStyle = FlatStyle.Flat,
+            BackColor = Pink,
+            ForeColor = Color.White,
+            Font = new Font("Bahnschrift", 9f, FontStyle.Bold),
+            Padding = new Padding(4, 2, 4, 2),
+            Margin = new Padding(6, 0, 0, 0),
+            UseVisualStyleBackColor = false
         };
         b.FlatAppearance.BorderSize = 0;
         b.Click += (_, _) => click();
@@ -234,11 +254,20 @@ class MainForm : Form
     {
         var b = new Button
         {
-            Text = text, Dock = DockStyle.Fill, FlatStyle = FlatStyle.Flat, ForeColor = Color.White,
-            Font = new Font("Bahnschrift", 12f, FontStyle.Bold), Margin = new Padding(4), UseVisualStyleBackColor = false
+            Text = text,
+            Width = 400,
+            Height = 90,
+            Dock = DockStyle.None,
+            FlatStyle = FlatStyle.Flat,
+            ForeColor = Color.White,
+            Font = new Font("Bahnschrift", 12f, FontStyle.Bold),
+            Margin = new Padding(0, 0, 0, 10),
+            UseVisualStyleBackColor = false
         };
+
         b.FlatAppearance.BorderSize = 0;
         b.Click += (_, _) => click();
+
         return b;
     }
 
@@ -246,10 +275,15 @@ class MainForm : Form
     {
         var b = new Button
         {
-            Text = text, AutoSize = true, AutoSizeMode = AutoSizeMode.GrowAndShrink,
-            FlatStyle = FlatStyle.Flat, ForeColor = Color.White,
-            Font = new Font("Bahnschrift", 9f, FontStyle.Bold), Padding = new Padding(6, 2, 6, 2),
-            Margin = new Padding(0, 4, 6, 0), UseVisualStyleBackColor = false
+            Text = text,
+            AutoSize = true,
+            AutoSizeMode = AutoSizeMode.GrowAndShrink,
+            FlatStyle = FlatStyle.Flat,
+            ForeColor = Color.White,
+            Font = new Font("Bahnschrift", 9f, FontStyle.Bold),
+            Padding = new Padding(6, 2, 6, 2),
+            Margin = new Padding(0, 4, 6, 0),
+            UseVisualStyleBackColor = false
         };
         b.FlatAppearance.BorderSize = 0;
         b.Click += (_, _) => click();
@@ -269,22 +303,22 @@ class MainForm : Form
     void SetCategory(bool shunting)
     {
         shuntMode = shunting;
-        RebuildFromList();
+        //RebuildFromList();
         RefreshUi();
     }
 
     // "Откуда" — список уникальных точек отправления для текущей категории,
     // в порядке появления в модели (примерно слева направо по схеме).
-    void RebuildFromList()
-    {
-        updatingCombo = true;
-        cmbFrom.Items.Clear();
-        foreach (var name in st.Routes.Where(r => r.Shunting == shuntMode).Select(r => r.From).Distinct())
-            cmbFrom.Items.Add(name);
-        if (cmbFrom.Items.Count > 0) cmbFrom.SelectedIndex = 0;
-        updatingCombo = false;
-        RebuildToList();
-    }
+    //void RebuildFromList()
+    //{
+    //    updatingCombo = true;
+    //    cmbFrom.Items.Clear();
+    //    foreach (var name in st.Routes.Where(r => r.Shunting == shuntMode).Select(r => r.From).Distinct())
+    //        cmbFrom.Items.Add(name);
+    //    if (cmbFrom.Items.Count > 0) cmbFrom.SelectedIndex = 0;
+    //    updatingCombo = false;
+    //    RebuildToList();
+    //}
 
     // "Куда" — точки назначения, доступные из выбранного "Откуда" в текущей категории.
     void RebuildToList()
@@ -425,6 +459,11 @@ class MainForm : Form
             catch (Exception ex) { AddLog("Ошибка отправки: " + ex.Message); }
         }
         else AddLog("(нет связи) " + cmd);
+    }
+
+    private void InitializeComponent()
+    {
+
     }
 
     protected override void OnFormClosing(FormClosingEventArgs e)
