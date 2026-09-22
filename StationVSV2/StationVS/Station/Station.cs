@@ -89,8 +89,17 @@ class Station
         Seg("m8", 330, 367, 485, 367);
         Seg("m6x", 165, 477, 225, 477);
         Seg("m6y", 225, 477, 305, 477);
+        Seg("m6x", 165, 477, 225, 477);
+        Seg("m6y", 225, 477, 305, 477);
         Seg("m6z", 312, 477, 430, 477);
-        //Seg("m6z2", 335, 477, 430, 477);
+        Seg("m8x", 186, 367, 320, 367);
+        Seg("m10x", 229, 256, 305, 256);
+        Seg("m6j", 100, 477, 158, 477);
+        Seg("m5x", 1416, 477, 1600, 477);
+        Seg("m5", 1278, 477, 1410, 477);
+        Seg("1c", 1296, 367, 1530, 367);
+
+
 
         // ---------- Декоративные участки ----------
         Dec(229, 256, 305, 256);
@@ -119,7 +128,7 @@ class Station
 
         // ---------- Стрелки: номер, подпись (x,y), прямая ветка, боковая ветка ----------
         Sw(1, 1452, 492, null, "d3");
-        Sw(2, 352, 497, "m6z", "dB");
+        Sw(2, 352, 497, "m6z2", "dB");
         Sw(3, 1352, 352, "1b", "d3");
         Sw(4, 245, 497, "m6y", "dM");
         Sw(5, 1262, 352, "1b", "d7");
@@ -142,16 +151,16 @@ class Station
         // ===== Поездные =====
         R(false, "Н5", "Ч5", "d5L,5a", (12, false));
         R(false, "Ч5", "Н", "5a,d5L", (12, false));
-        //R(false, "Ч2", "М5", "2b,2c", (19, true), (7, true));
-        R(false, "Н2", "Ч2", "2a");
-        R(false, "Н1", "Ч1", "1a");
-        R(false, "Н3", "Ч3", "3a");
-        R(false, "Н4", "Ч4", "4a", (2, false));
+        R(false, "Ч2", "М5", "2b,2c", (19, true), (7, true));
 
         // ===== Маневровые =====
+        R(true, "Н1", "Ч1", "1a");
+        R(true, "Н2", "Ч2", "2a");
+        R(true, "Н3", "Ч3", "3a");
+        R(true, "Н4", "Ч4", "dB,4a", (2, false));
         R(true, "Н1", "М8", "m8", (8, true));
-        R(true, "Н2", "М6", "m6z,m6y,m6x", (2, true), (4, true));
-        R(true, "Н4", "М6", "dB,m6z,m6y,m6x", (2, false), (4, true));
+        R(true, "Н2", "М6", "m6z2,m6z1,m6y,m6x", (2, true), (4, true));
+        R(true, "Н4", "М6", "dB,m6z1,m6y,m6x", (2, false), (4, true));
         R(true, "Н3", "М10", "m10", (10, true));
         R(true, "Ч1", "Путь1", "1b", (5, true));
         R(true, "Ч3", "М7", "3b1,3b2", (17, true), (15, true));
@@ -159,8 +168,8 @@ class Station
         R(true, "Ч5", "М7", "5b,d5,3b2", (17, false), (15, true));
         R(true, "Ч4", "М5", "4b,dBR,2c", (19, false), (7, true));
 
-        R(true, "М6", "Н2", "m6x,m6y,m6z", (4, true), (2, true));
-        R(true, "М6", "Н4", "m6x,m6y,m6z,dB", (4, true), (2, false));
+        R(true, "М6", "Н2", "m6x,m6y,m6z1,m6z2", (4, true), (2, true));
+        R(true, "М6", "Н4", "m6x,m6y,m6z1,dB", (4, true), (2, false));
         R(true, "М6", "М8", "m6x,dM", (4, false), (6, false));
         R(true, "М8", "М6", "dM,m6x", (6, false), (4, false));
         R(true, "М8", "Н1", "m8", (8, true));
@@ -193,7 +202,7 @@ class Station
 
     // ----- логика -----
     public void NotifyChanged() => Changed?.Invoke();
-    void Say(string msg) => Log?.Invoke(msg);
+    public void Say(string msg) => Log?.Invoke(msg);
 
     void SetSignal(string name, bool open)
     {
